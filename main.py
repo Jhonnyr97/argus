@@ -228,37 +228,52 @@ def navigate_json(json_data, key):
 def process_test(test, constants, saved_responses):
     """Process a single test, resolving constants in the request and expected values."""
     if 'request' in test and isinstance(test['request'], dict):
-        test['request'] = resolve_constants(constants, test['request'])  # Resolve constants in request
-
-        if 'params' in test['request']:
-            for param_key, param_value in test['request']['params'].items():
-                if isinstance(param_value, dict) and 'response_from' in param_value:
-                    response_name = param_value['response_from']['name']
-                    for key in param_value['response_from']['response']['json']:
-                        json_key = key['key']
-
-                        actual_value = saved_responses[response_name][json_key]
-                        test['request']['params'][param_key] = actual_value
-
-                        if actual_value is None:
-                            logger.error(f"Response '{response_name}' not found for parameter '{param_key}'.")
-                            raise ValueError(f"Response '{response_name}' not found for parameter '{param_key}'.")
+        process_request(test, constants, saved_responses)
 
     if 'expected' in test and isinstance(test['expected'], dict):
-        test['expected'] = resolve_constants(constants, test['expected'])  # Resolve constants in expected
+        process_expected(test, constants, saved_responses)
 
-        # find response_from in expected value or contains
-        for i, (keys) in enumerate(test['expected']['response']['json']):
-            for real_key, value in keys.items():
-                if isinstance(value, dict) and 'response_from' in value:
-                    response_name = value['response_from']['name']
-                    for key in value['response_from']['response']['json']:
-                        json_key = key['key']
-                        actual_value = saved_responses[response_name][json_key]
-                        test['expected']['response']['json'][i][real_key] = actual_value
-                        if actual_value is None:
-                            logger.error(f"Response '{response_name}' not found for parameter '{json_key}'.")
-                            raise ValueError(f"Response '{response_name}' not found for parameter '{json_key}'.")
+
+def process_request(test, constants, saved_responses):
+    """Process the request part of the test."""
+    test['request'] = resolve_constants(constants, test['request'])
+
+    if 'params' in test['request']:
+        process_request_params(test['request']['params'], saved_responses)
+
+
+def process_request_params(params, saved_responses):
+    """Process parameters in the request."""
+    for param_key, param_value in params.items():
+        if isinstance(param_value, dict) and 'response_from' in param_value:
+            actual_value = get_value_from_saved_response(saved_responses, param_value['response_from'], param_key)
+            params[param_key] = actual_value
+
+
+def process_expected(test, constants, saved_responses):
+    """Process the expected part of the test."""
+    test['expected'] = resolve_constants(constants, test['expected'])
+
+    for i, keys in enumerate(test['expected']['response']['json']):
+        for real_key, value in keys.items():
+            if isinstance(value, dict) and 'response_from' in value:
+                actual_value = get_value_from_saved_response(saved_responses, value['response_from'], real_key)
+                test['expected']['response']['json'][i][real_key] = actual_value
+
+
+def get_value_from_saved_response(saved_responses, response_from, param_key):
+    """Retrieve a value from a saved response."""
+    response_name = response_from['name']
+    json_key = response_from['response']['json'][0]['key']
+
+    actual_value = saved_responses[response_name][json_key]
+
+    if actual_value is None:
+        error_message = f"Response '{response_name}' not found for parameter '{param_key}'."
+        logger.error(error_message)
+        raise ValueError(error_message)
+
+    return actual_value
 
 
 def make_request(request, constants, saved_responses):
@@ -309,80 +324,95 @@ def run_tests(test_file):
     console.print(f"Loading test file: '{test_file}'")
     data = read_yaml(test_file)
 
-    if data:
-        constants = data.get('constants', {})  # Get the constants if defined
-
-        # Resolve constants for the entire data structure
-        data = resolve_constants(constants, data)
-        saved_responses = Box(box_dots=True)  # Dictionary to store saved responses
-        saved_responses["results"] = []
-        if 'tests' in data:
-            for test in data['tests']:
-                # Set the logging level if specified in the test
-                log_level = test.get('log', 'INFO')  # Default to INFO level
-                logging_level = set_logging_level(log_level)
-                logging.getLogger().setLevel(logging_level)
-                logger.debug(f"Running test: {test['name']}")
-                logger.debug(f"- Request: {json.dumps(test['request'], indent=4)}")
-                logger.debug(f"- Expected: {json.dumps(test['expected'], indent=4)}")
-                console.print(".", style="bold green", end="")
-                try:
-                    validate_test(test, get_required_keys())  # Validate test case
-                    process_test(test, constants, saved_responses)  # Process the test case
-
-                    # Check if the HTTP verb is valid
-                    check_verb_http(test)
-
-                    # Make the request
-                    response = make_request(test['request'], constants, saved_responses)
-                    logger.debug(f"- Response: {json.dumps(response.json(), indent=4)}")
-                    # Save the response for future reference if needed
-                    json_response, pretty_json = parse_json_response(response.text)
-                    saved_responses[f"{test['name']}"] = json_response
-
-                    # Validate the expected response
-                    validate_expected_response(response, test['expected'])
-
-                    saved_responses["results"].append(
-                        {
-                            'name': test['name'],
-                            'result': 'OK',
-                            'error': None
-                        }
-                    )
-                except Exception as e:
-                    logger.error(f"Test '{test['name']}' failed: {e}")
-                    saved_responses["results"].append({
-                        'name': test['name'],
-                        'response': None,
-                        'result': 'Failed',
-                        'error': str(e)
-                    })
-
-        else:
-            logger.warning("No tests found in the YAML file.")
-
-        # Print results summary using rich
-        table = Table(show_header=True, header_style="bold magenta")
-        table.add_column("Name", style="white")
-        table.add_column("Result")
-        table.add_column("Error", style="red")
-
-        for index, result in enumerate(saved_responses.results):
-            name = result['name']
-            status = result['result']
-            error = result['error']
-
-            if status == 'Failed':
-                status = f"[red]{status}[/red]"
-            else:
-                status = f"[green]{status}[/green]"
-
-            table.add_row(name, status, error)
-        console.print("\n")
-        console.print(table)
-    else:
+    if not data:
         logger.warning("Failed to load the test data from the YAML file.")
+        return
+
+    constants = data.get('constants', {})
+    data = resolve_constants(constants, data)
+    saved_responses = Box(box_dots=True)
+    saved_responses["results"] = []
+
+    if 'tests' not in data:
+        logger.warning("No tests found in the YAML file.")
+        return
+
+    for test in data['tests']:
+        run_single_test(test, constants, saved_responses)
+
+    print_results_summary(saved_responses.results)
+
+
+def run_single_test(test, constants, saved_responses):
+    """Runs a single test case."""
+    set_up_logging(test)
+    logger.debug(f"Running test: {test['name']}")
+    logger.debug(f"- Request: {json.dumps(test['request'], indent=4)}")
+    logger.debug(f"- Expected: {json.dumps(test['expected'], indent=4)}")
+    console.print(".", style="bold green", end="")
+
+    try:
+        validate_test(test, get_required_keys())
+        process_test(test, constants, saved_responses)
+        check_verb_http(test)
+
+        response = make_request(test['request'], constants, saved_responses)
+        log_response(response)
+        save_response(test['name'], response, saved_responses)
+
+        validate_expected_response(response, test['expected'])
+
+        saved_responses["results"].append({
+            'name': test['name'],
+            'result': 'OK',
+            'error': None
+        })
+    except Exception as e:
+        handle_test_failure(test['name'], e, saved_responses)
+
+
+def set_up_logging(test):
+    """Sets up logging for a test."""
+    log_level = test.get('log', 'INFO')
+    logging_level = set_logging_level(log_level)
+    logging.getLogger().setLevel(logging_level)
+
+
+def log_response(response):
+    """Logs the response from a request."""
+    logger.debug(f"- Response: {json.dumps(response.json(), indent=4)}")
+
+
+def save_response(test_name, response, saved_responses):
+    """Saves the response for future reference."""
+    json_response, _ = parse_json_response(response.text)
+    saved_responses[test_name] = json_response
+
+
+def handle_test_failure(test_name, error, saved_responses):
+    """Handles a test failure."""
+    logger.error(f"Test '{test_name}' failed: {error}")
+    saved_responses["results"].append({
+        'name': test_name,
+        'response': None,
+        'result': 'Failed',
+        'error': str(error)
+    })
+
+
+def print_results_summary(results):
+    """Prints a summary of test results."""
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("Name", style="white")
+    table.add_column("Result")
+    table.add_column("Error", style="red")
+
+    for result in results:
+        status = "[green]OK[/green]" if result['result'] == 'OK' else "[red]Failed[/red]"
+        table.add_row(result['name'], status, result['error'] or "")
+
+    console.print("\n")
+    console.print(table)
 
 
 # Entry point of the script
