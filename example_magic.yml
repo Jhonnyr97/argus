@@ -41,6 +41,24 @@ tests:
           - key: "cards[0].name"
             equal: "Black Lotus"
 
+  - name: "Test filter cards by name not_equal"
+    description: "Verifica che l'endpoint filtri le carte per nome."
+    # Check that the endpoint filters cards by name.
+    request:
+      method: "GET"
+      endpoint: "{base_url}/cards"
+      params:
+        name: "Black Lotus"
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "cards"
+            type: "list"
+          - key: "cards[0].name"
+            not_equal: "NONE"
+
   - name: "Test filter cards by name with response"
     description: "Verifica che l'endpoint filtri le carte per nome e restituisca dettagli."
     # Check that the endpoint filters cards by name and returns details.

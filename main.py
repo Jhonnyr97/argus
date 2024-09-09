@@ -1,5 +1,7 @@
 import argparse
 import os
+from typing import Dict, Any
+
 import yaml
 import logging
 import re
@@ -9,31 +11,40 @@ from box import Box
 from rich.logging import RichHandler
 from rich.console import Console
 from rich.table import Table
-from rich.text import Text
+from pydantic import BaseModel, validator, field_validator, Field, ValidationError
 
 # Initialize Rich console
 console = Console()
 
 # ANSI escape sequences for colored logging
-logging.basicConfig(level=logging.DEBUG,
+logging.basicConfig(level=logging.INFO,
                     format='%(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S',
+                    datefmt='%H:%M:%S',
                     handlers=[RichHandler()])
 
 logger = logging.getLogger("API_Tester")
 
 
-# Adjusting the logging levels with rich
-def set_logging_level(log_level):
-    """Set the logging level based on the provided string."""
-    levels = {
-        'DEBUG': logging.DEBUG,
-        'INFO': logging.INFO,
-        'WARNING': logging.WARNING,
-        'ERROR': logging.ERROR,
-        'CRITICAL': logging.CRITICAL
-    }
-    logger.setLevel(levels.get(log_level.upper(), logging.DEBUG))  # Default to DEBUG if not found
+class HTTPRequestModel(BaseModel):
+    verb: str
+
+    @field_validator('verb')
+    def check_verb_http(cls, value):
+        valid_verbs = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD', 'CONNECT', 'TRACE']
+        if value not in valid_verbs:
+            raise ValueError(f"Invalid HTTP verb: {value}")
+        return value
+
+
+class RequestModel(BaseModel):
+    method: str
+    endpoint: str
+
+
+# Define a Pydantic model for the test structure
+class TestModel(BaseModel):
+    request: RequestModel
+    extra_data: Dict[str, Any] = Field(default_factory=dict)  # To allow additional data
 
 
 def get_required_keys():
@@ -65,21 +76,22 @@ def resolve_constants(constants, data):
     return data  # return the data as is for other types
 
 
-def validate_test(test, required_keys):
+# Function to validate the test using Pydantic
+def validate_test(test: dict, required_keys: list):
     """Validates that all required keys are present in the test."""
+
+    # Check for missing required keys
     missing_keys = [key for key in required_keys if key not in test]
     if missing_keys:
         logger.error(f"Test missing required keys: {', '.join(missing_keys)} in test: {test}")
         raise ValueError(f"Test is invalid due to missing keys: {', '.join(missing_keys)}")
 
-    # Validate the request structure
-    if 'request' not in test or not isinstance(test['request'], dict):
-        logger.error(f"Request must be a dictionary in test: {test}")
-        raise ValueError("Request must be a dictionary.")
-
-    if 'method' not in test['request'] or 'endpoint' not in test['request']:
-        logger.error(f"Request missing 'method' or 'endpoint' in test: {test}")
-        raise ValueError("Request must contain both 'method' and 'endpoint.'")
+    # Validate the request structure using Pydantic
+    try:
+        TestModel(**test)
+    except ValidationError as e:
+        logger.error(f"Test validation failed: {e}")
+        raise ValueError(f"Test structure is invalid: {e}")
 
 
 def set_logging_level(log_level):
@@ -87,9 +99,6 @@ def set_logging_level(log_level):
     levels = {
         'DEBUG': logging.DEBUG,
         'INFO': logging.INFO,
-        'WARNING': logging.WARNING,
-        'ERROR': logging.ERROR,
-        'CRITICAL': logging.CRITICAL
     }
     return levels.get(log_level.upper(), logging.INFO)  # Default to DEBUG if not found
 
@@ -106,7 +115,7 @@ def parse_json_response(response_text):
 
 
 def validate_type(expected_key, actual_value, expected_type):
-    """Validate the type of a given value against the expected type."""
+    """Validate the type of given value against the expected type."""
     type_mapping = {
         "list": list,
         "dict": dict,
@@ -203,6 +212,7 @@ def validate_expected_response(response, expected):
                 if validation_key in item:
                     validation_function(key, actual_value, item[validation_key])
 
+
 def navigate_json(json_data, key):
     """Navigate through a nested JSON object using a dot-separated key."""
     try:
@@ -250,23 +260,6 @@ def process_test(test, constants, saved_responses):
                             logger.error(f"Response '{response_name}' not found for parameter '{json_key}'.")
                             raise ValueError(f"Response '{response_name}' not found for parameter '{json_key}'.")
 
-    # Pretty print JSON components
-    params_pretty = json.dumps(test['request'].get('params', {}), indent=4)
-    headers_pretty = json.dumps(test['request'].get('headers', {}), indent=4)
-    body_pretty = json.dumps(test['request'].get('body', {}), indent=4)
-    expected_pretty = json.dumps(test['expected'], indent=4)
-
-    # Use Rich to log the request details
-    text = Text()
-    text.append("Request Details:\n", style="bold underline")
-    text.append(f"  Method: {test['request']['method']}\n", style="bold cyan")
-    text.append(f"  Endpoint: {test['request']['endpoint']}\n", style="cyan")
-    text.append(f"  Params: {params_pretty}\n", style="cyan")
-    text.append(f"  Headers: {headers_pretty}\n", style="cyan")
-    text.append(f"  Body: {body_pretty}\n", style="cyan")
-    text.append(f"  Expected Value: {expected_pretty}\n", style="cyan")
-    logger.debug(text)
-
 
 def make_request(request, constants, saved_responses):
     """Make an HTTP request based on the provided request parameters."""
@@ -306,47 +299,43 @@ def make_request(request, constants, saved_responses):
         raise
 
 
-def check_verb_http(verb):
-    """Check if the HTTP verb is valid."""
-    verbs = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS', 'HEAD', 'CONNECT', 'TRACE']
-    if verb not in verbs:
-        logger.error(f"Invalid HTTP verb: {verb}")
-        raise ValueError(f"Invalid HTTP verb: {verb}")
+def check_verb_http(test):
+    verb = test['request']['method'].upper()
+    HTTPRequestModel(verb=verb)
 
 
 def run_tests(test_file):
     """Loads and processes the test file."""
-    logger.info(f"Loading test file: {test_file}")
+    console.print(f"Loading test file: '{test_file}'")
     data = read_yaml(test_file)
 
     if data:
         constants = data.get('constants', {})  # Get the constants if defined
-        logger.info(f"Constants Loaded: {json.dumps(constants, indent=4)}")
 
         # Resolve constants for the entire data structure
         data = resolve_constants(constants, data)
         saved_responses = Box(box_dots=True)  # Dictionary to store saved responses
-        results = []  # List to store test results
-
+        saved_responses["results"] = []
         if 'tests' in data:
-            required_keys = get_required_keys()  # Get the required keys
             for test in data['tests']:
                 # Set the logging level if specified in the test
-                log_level = test.get('log', 'INFO')  # Default to DEBUG level
+                log_level = test.get('log', 'INFO')  # Default to INFO level
                 logging_level = set_logging_level(log_level)
                 logging.getLogger().setLevel(logging_level)
-
+                logger.debug(f"Running test: {test['name']}")
+                logger.debug(f"- Request: {json.dumps(test['request'], indent=4)}")
+                logger.debug(f"- Expected: {json.dumps(test['expected'], indent=4)}")
+                console.print(".", style="bold green", end="")
                 try:
-                    validate_test(test, required_keys)  # Validate test case
+                    validate_test(test, get_required_keys())  # Validate test case
                     process_test(test, constants, saved_responses)  # Process the test case
 
                     # Check if the HTTP verb is valid
-                    verb = test['request']['method'].upper()
-                    check_verb_http(verb)
+                    check_verb_http(test)
 
                     # Make the request
                     response = make_request(test['request'], constants, saved_responses)
-
+                    logger.debug(f"- Response: {json.dumps(response.json(), indent=4)}")
                     # Save the response for future reference if needed
                     json_response, pretty_json = parse_json_response(response.text)
                     saved_responses[f"{test['name']}"] = json_response
@@ -354,28 +343,43 @@ def run_tests(test_file):
                     # Validate the expected response
                     validate_expected_response(response, test['expected'])
 
-                    logger.info(f"'OK' - {test['name']}")
-                    results.append({'name': test['name'], 'status': 'OK', 'error': None})
+                    saved_responses["results"].append(
+                        {
+                            'name': test['name'],
+                            'result': 'OK',
+                            'error': None
+                        }
+                    )
                 except Exception as e:
                     logger.error(f"Test '{test['name']}' failed: {e}")
-                    results.append({'name': test['name'], 'status': 'FAIL', 'error': str(e)})
+                    saved_responses["results"].append({
+                        'name': test['name'],
+                        'response': None,
+                        'result': 'Failed',
+                        'error': str(e)
+                    })
 
         else:
             logger.warning("No tests found in the YAML file.")
 
         # Print results summary using rich
-        console.print("\n[bold magenta]Test Results Summary:[/bold magenta]")
-        table = Table(show_header=True, header_style="bold blue")
-        table.add_column("Test Name", style="dim", width=30)
-        table.add_column("Status", justify="center")
-        table.add_column("Error")
+        table = Table(show_header=True, header_style="bold magenta")
+        table.add_column("Name", style="white")
+        table.add_column("Result")
+        table.add_column("Error", style="red")
 
-        for result in results:
-            status = result['status']
+        for index, result in enumerate(saved_responses.results):
             name = result['name']
-            error = result['error'] if result['error'] else "-"
-            table.add_row(name, status, error)
+            status = result['result']
+            error = result['error']
 
+            if status == 'Failed':
+                status = f"[red]{status}[/red]"
+            else:
+                status = f"[green]{status}[/green]"
+
+            table.add_row(name, status, error)
+        console.print("\n")
         console.print(table)
     else:
         logger.warning("Failed to load the test data from the YAML file.")
