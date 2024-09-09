@@ -1,0 +1,174 @@
+constants:
+  base_url: "https://api.magicthegathering.io/v1"
+  default_page_size: 10
+
+tests:
+  - name: "Test list all cards with pagination"
+    description: "Verify that the endpoint returns a list of cards with pagination."
+    request:
+      method: "GET"
+      endpoint: "{base_url}/cards"
+      params:
+        page: 1
+        pageSize: "{default_page_size}"
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "cards"
+            type: "list"
+            length: "{default_page_size}"
+
+  - name: "Test filter cards by name"
+    description: "Verify that the endpoint filters cards by name."
+    request:
+      method: "GET"
+      endpoint: "{base_url}/cards"
+      params:
+        name: "Black Lotus"
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "cards"
+            type: "list"
+          - key: "cards[0].name"
+            equal: "Black Lotus"
+          - key: "cards[0].name"
+            not_equal: "Nonexistent Card"  # Ensure it does not equal an invalid name
+
+  - name: "Test filter cards by foreign name"
+    description: "Verify that the endpoint filters cards by name in a foreign language."
+    request:
+      method: "GET"
+      endpoint: "{base_url}/cards"
+      params:
+        name: "Arcángel Avacyn"  # Spanish name
+        language: "spanish"
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "cards"
+            type: "list"
+          - key: "cards[0].name"
+            equal: "Archangel Avacyn // Avacyn, the Purifier"
+
+  - name: "Test retrieve all sets"
+    description: "Verify that the endpoint returns all available expansions."
+    request:
+      method: "GET"
+      endpoint: "{base_url}/sets"
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "sets"
+            type: "list"  # Expect a list of sets
+
+  - name: "Test retrieve specific set by id"
+    description: "Verify that the endpoint returns information about a specific set."
+    request:
+      method: "GET"
+      endpoint: "{base_url}/sets/ktk"  # Example set code for Khans of Tarkir
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "set"
+            type: "dict"  # Expect a dictionary for set details
+          - key: "set.code"
+            equal: "KTK"  # Check that the set code matches
+
+  - name: "Test filter cards by set"
+    description: "Verify that the endpoint filters cards by set."
+    request:
+      method: "GET"
+      endpoint: "{base_url}/cards"
+      params:
+        set: "ktk"  # Filter by Khans of Tarkir set
+        pageSize: 5
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "cards"
+            type: "list"
+            length: 5  # Expect 5 cards from the specified set
+          - key: "cards[0].set"
+            equal: "KTK"  # Verify that the first card belongs to the specified set
+
+  - name: "Test filter cards by rarity"
+    description: "Verify that the endpoint filters cards by rarity."
+    request:
+      method: "GET"
+      endpoint: "{base_url}/cards"
+      params:
+        rarity: "Mythic"  # Filter for mythic rare cards
+        pageSize: 5
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "cards"
+            type: "list"
+            length: 5  # Should return 5 mythic rare cards
+          - key: "cards[0].rarity"
+            equal: "Mythic"  # Verify that the first card is mythic rare
+          - key: "cards[0].rarity"
+            regex: "^Mythic$"  # Ensure rarity matches exactly 'Mythic'
+
+  - name: "Test pagination beyond available cards"
+    description: "Verify that the system handles pagination beyond the number of available cards."
+    request:
+      method: "GET"
+      endpoint: "{base_url}/cards"
+      params:
+        page: 1000  # Request a page number that likely exceeds available pages
+        pageSize: 5
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "cards"
+            type: "list"
+            length: 0  # Expect an empty list as there are no cards on this page
+
+  - name: "Test filter cards with no results"
+    description: "Verify that the endpoint returns zero cards for an invalid filter."
+    request:
+      method: "GET"
+      endpoint: "{base_url}/cards"
+      params:
+        name: "Nonexistent Card"  # Use a name that does not exist
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "cards"
+            type: "list"
+            length: 0  # Expect no cards to be returned
+
+  - name: "Test invalid request returns error"
+    description: "Verify that a request with an invalid parameter returns an error."
+    request:
+      method: "GET"
+      endpoint: "{base_url}/asdasd"  # Invalid endpoint to trigger error
+      params:
+        invalid_param: "invalid"
+    expected:
+      status: 404
+      response:
+        type: "json"
+        json:
+          - key: "error"
+            contains: "not-found"

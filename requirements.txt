@@ -1,0 +1,7 @@
+pyyaml
+pytest
+beautifulsoup4
+requests
+rich
+pytest-mock
+python-box
