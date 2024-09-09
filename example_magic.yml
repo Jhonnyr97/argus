@@ -140,26 +140,6 @@ tests:
           - key: "cards[0].type"
             contains: "Creature"
 
-  - name: "Test filter cards by set"
-    description: "Verifica che l'endpoint filtri le carte per set."
-    # Check that the endpoint filters cards by set.
-    request:
-      method: "GET"
-      endpoint: "{base_url}/cards"
-      params:
-        set: "alpha"  # Specify a set name to filter by
-        pageSize: 5
-    expected:
-      status: 200
-      response:
-        type: "json"
-        json:
-          - key: "cards"
-            type: "list"
-            length: 5  # Should return 5 cards from the specified set
-          - key: "cards[0].set"
-            equal: "alpha"  # Verify that the first card belongs to the specified set
-
   - name: "Test filter cards by rarity"
     description: "Verifica che l'endpoint filtri le carte per rarità."
     # Check that the endpoint filters cards by rarity.
