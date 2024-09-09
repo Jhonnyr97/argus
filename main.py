@@ -1,5 +1,7 @@
 import argparse
+import datetime
 import os
+import sys
 from typing import Dict, Any
 
 import yaml
@@ -178,6 +180,22 @@ def validate_regex(expected_key, actual_value, expected_regex):
         raise ValueError(f"Key '{expected_key}' does not match the regex pattern.")
 
 
+def validate_date_format(expected_key, actual_value, expected_format):
+    """Validate that a date string matches the expected format."""
+    try:
+        datetime.datetime.strptime(actual_value, expected_format)
+    except ValueError:
+        logger.error(f"Key '{expected_key}' does not match the expected date format.")
+        raise ValueError(f"Key '{expected_key}' does not match the expected date format.")
+
+
+def validate_range(expected_key, actual_value, expected_range):
+    """Validate that a value falls within the expected range."""
+    if not (expected_range[0] <= actual_value <= expected_range[1]):
+        logger.error(f"Key '{expected_key}' is not within the expected range.")
+        raise ValueError(f"Key '{expected_key}' is not within the expected range.")
+
+
 def validate_expected_response(response, expected):
     """Validate the actual response against the expected values."""
     # Validate status code
@@ -201,7 +219,9 @@ def validate_expected_response(response, expected):
             'not_contains': lambda k, v, e: validate_membership(k, v, e, should_contain=False),
             'not_empty': lambda k, v: validate_empty(k, v, should_be_empty=False),
             'empty': lambda k, v: validate_empty(k, v, should_be_empty=True),
-            'regex': validate_regex,
+            'regex': lambda k, v, e: validate_regex(k, v, e),
+            'date_format': lambda k, v, e: validate_date_format(k, v, e),
+            'range': lambda k, v, e: validate_range(k, v, e),
         }
 
         for item in expected['response']['json']:
@@ -306,8 +326,6 @@ def make_request(request, constants, saved_responses):
             raise ValueError(f"Unsupported HTTP method: {method}")
 
         logger.debug(f"Response Status Code: {response.status_code}")
-        _, pretty_json = parse_json_response(response.text)
-        logger.debug(f"Response Content: {pretty_json}")  # Parse and log the response content
         return response
     except requests.RequestException as e:
         logger.error(f"Request failed: {e}")
@@ -427,6 +445,7 @@ if __name__ == '__main__':
                 run_tests(test_file)
             else:
                 logger.error(f"Error: the file '{test_file}' does not exist.")
+                sys.exit(1)
     else:
         yml_files_found = False
         for file in os.listdir('.'):
@@ -436,3 +455,4 @@ if __name__ == '__main__':
 
         if not yml_files_found:
             logger.warning("No YAML files found in the current directory.")
+            sys.exit(1)
