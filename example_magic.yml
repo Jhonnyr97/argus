@@ -1,10 +1,13 @@
 constants:
+  # Base URL for the Magic: The Gathering API
   base_url: "https://api.magicthegathering.io/v1"
+  # Default number of items per page when paginating
   default_page_size: 10
 
 tests:
   - name: "Test list all cards with pagination"
-    description: "Verify that the endpoint returns a list of cards with pagination."
+    description: "Verifica che l'endpoint restituisca una lista di carte con paginazione."
+    # Check that the endpoint returns a list of cards with pagination.
     request:
       method: "GET"
       endpoint: "{base_url}/cards"
@@ -21,7 +24,8 @@ tests:
             length: "{default_page_size}"
 
   - name: "Test filter cards by name"
-    description: "Verify that the endpoint filters cards by name."
+    description: "Verifica che l'endpoint filtri le carte per nome."
+    # Check that the endpoint filters cards by name.
     request:
       method: "GET"
       endpoint: "{base_url}/cards"
@@ -36,17 +40,50 @@ tests:
             type: "list"
           - key: "cards[0].name"
             equal: "Black Lotus"
-          - key: "cards[0].name"
-            not_equal: "Nonexistent Card"  # Ensure it does not equal an invalid name
 
-  - name: "Test filter cards by foreign name"
-    description: "Verify that the endpoint filters cards by name in a foreign language."
+  - name: "Test filter cards by name with response"
+    description: "Verifica che l'endpoint filtri le carte per nome e restituisca dettagli."
+    # Check that the endpoint filters cards by name and returns details.
     request:
       method: "GET"
       endpoint: "{base_url}/cards"
       params:
-        name: "Arcángel Avacyn"  # Spanish name
-        language: "spanish"
+        name:
+          response_from:
+            name: "Test filter cards by name"
+            response:
+              json:
+                - key: "cards[0].name"
+        rarity:
+          response_from: # get value response from another test
+            name: "Test filter cards by name"
+            response:
+              json:
+                - key: "cards[0].rarity"
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "cards"
+            type: "list"
+          - key: "cards[0].name"
+            equal:
+              response_from: # get value response from another test
+                name: "Test filter cards by name"
+                response:
+                  json:
+                    - key: "cards[0].name"
+
+  - name: "Test filter cards by name with multi keys"
+    description: "Verifica che l'endpoint filtri le carte per nome e recuperi più chiavi."
+    # Check that the endpoint filters cards by name and retrieves multiple keys.
+    response_from: "Test list all cards with pagination"
+    request:
+      method: "GET"
+      endpoint: "{base_url}/cards"
+      params:
+        name: "Archangel Avacyn // Avacyn, the Purifier"
     expected:
       status: 200
       response:
@@ -56,42 +93,20 @@ tests:
             type: "list"
           - key: "cards[0].name"
             equal: "Archangel Avacyn // Avacyn, the Purifier"
+          - key: "cards[0].colorIdentity"
+            type: "list"
+            equal:
+              - "R"
+              - "W"
 
-  - name: "Test retrieve all sets"
-    description: "Verify that the endpoint returns all available expansions."
-    request:
-      method: "GET"
-      endpoint: "{base_url}/sets"
-    expected:
-      status: 200
-      response:
-        type: "json"
-        json:
-          - key: "sets"
-            type: "list"  # Expect a list of sets
-
-  - name: "Test retrieve specific set by id"
-    description: "Verify that the endpoint returns information about a specific set."
-    request:
-      method: "GET"
-      endpoint: "{base_url}/sets/ktk"  # Example set code for Khans of Tarkir
-    expected:
-      status: 200
-      response:
-        type: "json"
-        json:
-          - key: "set"
-            type: "dict"  # Expect a dictionary for set details
-          - key: "set.code"
-            equal: "KTK"  # Check that the set code matches
-
-  - name: "Test filter cards by set"
-    description: "Verify that the endpoint filters cards by set."
+  - name: "Test filter cards by color"
+    description: "Verifica che l'endpoint filtri le carte per colore."
+    # Check that the endpoint filters cards by color.
     request:
       method: "GET"
       endpoint: "{base_url}/cards"
       params:
-        set: "ktk"  # Filter by Khans of Tarkir set
+        colors: "R"
         pageSize: 5
     expected:
       status: 200
@@ -100,12 +115,54 @@ tests:
         json:
           - key: "cards"
             type: "list"
-            length: 5  # Expect 5 cards from the specified set
+            length: 5
+          - key: "cards[0].colors"
+            type: "list"
+            contains: "R"
+
+  - name: "Test filter cards by type"
+    description: "Verifica che l'endpoint filtri le carte per tipo."
+    # Check that the endpoint filters cards by type.
+    request:
+      method: "GET"
+      endpoint: "{base_url}/cards"
+      params:
+        type: "creature"
+        pageSize: 5
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "cards"
+            type: "list"
+            length: 5
+          - key: "cards[0].type"
+            contains: "Creature"
+
+  - name: "Test filter cards by set"
+    description: "Verifica che l'endpoint filtri le carte per set."
+    # Check that the endpoint filters cards by set.
+    request:
+      method: "GET"
+      endpoint: "{base_url}/cards"
+      params:
+        set: "alpha"  # Specify a set name to filter by
+        pageSize: 5
+    expected:
+      status: 200
+      response:
+        type: "json"
+        json:
+          - key: "cards"
+            type: "list"
+            length: 5  # Should return 5 cards from the specified set
           - key: "cards[0].set"
-            equal: "KTK"  # Verify that the first card belongs to the specified set
+            equal: "alpha"  # Verify that the first card belongs to the specified set
 
   - name: "Test filter cards by rarity"
-    description: "Verify that the endpoint filters cards by rarity."
+    description: "Verifica che l'endpoint filtri le carte per rarità."
+    # Check that the endpoint filters cards by rarity.
     request:
       method: "GET"
       endpoint: "{base_url}/cards"
@@ -122,11 +179,10 @@ tests:
             length: 5  # Should return 5 mythic rare cards
           - key: "cards[0].rarity"
             equal: "Mythic"  # Verify that the first card is mythic rare
-          - key: "cards[0].rarity"
-            regex: "^Mythic$"  # Ensure rarity matches exactly 'Mythic'
 
   - name: "Test pagination beyond available cards"
-    description: "Verify that the system handles pagination beyond the number of available cards."
+    description: "Verifica che il sistema gestisca la paginazione oltre il numero disponibile di carte."
+    # Check that the system handles pagination beyond the available number of cards.
     request:
       method: "GET"
       endpoint: "{base_url}/cards"
@@ -143,7 +199,8 @@ tests:
             length: 0  # Expect an empty list as there are no cards on this page
 
   - name: "Test filter cards with no results"
-    description: "Verify that the endpoint returns zero cards for an invalid filter."
+    description: "Verifica che l'endpoint ritorni zero carte per un filtro errato."
+    # Check that the endpoint returns zero cards for an invalid filter.
     request:
       method: "GET"
       endpoint: "{base_url}/cards"
@@ -159,7 +216,8 @@ tests:
             length: 0  # Expect no cards to be returned
 
   - name: "Test invalid request returns error"
-    description: "Verify that a request with an invalid parameter returns an error."
+    description: "Verifica che una richiesta con un parametro errato ritorni un errore."
+    # Check that a request with an invalid parameter returns an error.
     request:
       method: "GET"
       endpoint: "{base_url}/asdasd"  # Invalid endpoint to trigger error
