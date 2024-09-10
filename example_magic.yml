@@ -4,16 +4,31 @@ constants:
   # Default number of items per page when paginating
   default_page_size: 10
 
+info:
+  name: "Magic: The Gathering API"
+  description: "Test suite for the Magic: The Gathering API."
+  schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+
+config:
+  always_run: true
+  default_timeout: 10000
+  on_failure:
+    send_email: true
+    recipient:
+      email:
+        - "your_email@example.com"
+
+
 tests:
   - name: "Test list all cards with pagination"
     description: "Verifica che l'endpoint restituisca una lista di carte con paginazione."
     # Check that the endpoint returns a list of cards with pagination.
     request:
       method: "GET"
-      endpoint: "{base_url}/cards"
+      endpoint: "{{base_url}}/cards"
       params:
         page: 1
-        pageSize: "{default_page_size}"
+        pageSize: "{{default_page_size}}"
     expected:
       status: 200
       response:
@@ -21,14 +36,14 @@ tests:
         json:
           - key: "cards"
             type: "list"
-            length: "{default_page_size}"
+            length: "{{default_page_size}}"
 
   - name: "Test filter cards by name"
     description: "Verifica che l'endpoint filtri le carte per nome."
     # Check that the endpoint filters cards by name.
     request:
       method: "GET"
-      endpoint: "{base_url}/cards"
+      endpoint: "{{base_url}}/cards"
       params:
         name: "Black Lotus"
     expected:
@@ -46,7 +61,7 @@ tests:
     # Check that the endpoint filters cards by name.
     request:
       method: "GET"
-      endpoint: "{base_url}/cards"
+      endpoint: "{{base_url}}/cards"
       params:
         name: "Black Lotus"
     expected:
@@ -64,7 +79,7 @@ tests:
     # Check that the endpoint filters cards by name.
     request:
       method: "GET"
-      endpoint: "{base_url}/cards"
+      endpoint: "{{base_url}}/cards"
       params:
         name: "Black Lotus"
     expected:
@@ -82,7 +97,7 @@ tests:
     # Check that the endpoint filters cards by name and returns details.
     request:
       method: "GET"
-      endpoint: "{base_url}/cards"
+      endpoint: "{{base_url}}/cards"
       params:
         name:
           response_from:
@@ -117,7 +132,7 @@ tests:
     response_from: "Test list all cards with pagination"
     request:
       method: "GET"
-      endpoint: "{base_url}/cards"
+      endpoint: "{{base_url}}/cards"
       params:
         name: "Archangel Avacyn // Avacyn, the Purifier"
     expected:
@@ -140,7 +155,7 @@ tests:
     # Check that the endpoint filters cards by color.
     request:
       method: "GET"
-      endpoint: "{base_url}/cards"
+      endpoint: "{{base_url}}/cards"
       params:
         colors: "R"
         pageSize: 5
@@ -161,7 +176,7 @@ tests:
     # Check that the endpoint filters cards by type.
     request:
       method: "GET"
-      endpoint: "{base_url}/cards"
+      endpoint: "{{base_url}}/cards"
       params:
         type: "creature"
         pageSize: 5
@@ -181,7 +196,7 @@ tests:
     # Check that the endpoint filters cards by rarity.
     request:
       method: "GET"
-      endpoint: "{base_url}/cards"
+      endpoint: "{{base_url}}/cards"
       params:
         rarity: "Mythic"  # Filter for mythic rare cards
         pageSize: 5
@@ -201,7 +216,7 @@ tests:
     # Check that the system handles pagination beyond the available number of cards.
     request:
       method: "GET"
-      endpoint: "{base_url}/cards"
+      endpoint: "{{base_url}}/cards"
       params:
         page: 1000  # Request a page number that likely exceeds available pages
         pageSize: 5
@@ -219,7 +234,7 @@ tests:
     # Check that the endpoint returns zero cards for an invalid filter.
     request:
       method: "GET"
-      endpoint: "{base_url}/cards"
+      endpoint: "{{base_url}}/cards"
       params:
         name: "Nonexistent Card"  # Use a name that does not exist
     expected:
@@ -236,7 +251,7 @@ tests:
     # Check that a request with an invalid parameter returns an error.
     request:
       method: "GET"
-      endpoint: "{base_url}/asdasd"  # Invalid endpoint to trigger error
+      endpoint: "{{base_url}}/asdasd"  # Invalid endpoint to trigger error
       params:
         invalid_param: "invalid"
     expected:

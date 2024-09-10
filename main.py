@@ -73,7 +73,7 @@ def resolve_constants(constants, data):
     elif isinstance(data, str):
         for key, value in constants.items():
             if isinstance(value, str):
-                data = re.sub(r'\{' + re.escape(key) + r'\}', value, data)
+                data = re.sub(r'\{{' + re.escape(key) + r'\}}', value, data)
         return data
     return data  # return the data as is for other types
 

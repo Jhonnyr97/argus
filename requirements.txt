@@ -5,3 +5,5 @@ requests
 rich
 pytest-mock
 python-box
+pydantic
+ruamel.yaml
