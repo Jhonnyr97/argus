@@ -4,21 +4,6 @@ constants:
   # Default number of items per page when paginating
   default_page_size: 10
 
-info:
-  name: "Magic: The Gathering API"
-  description: "Test suite for the Magic: The Gathering API."
-  schema: "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-
-config:
-  always_run: true
-  default_timeout: 10000
-  on_failure:
-    send_email: true
-    recipient:
-      email:
-        - "your_email@example.com"
-
-
 tests:
   - name: "Test list all cards with pagination"
     description: "Verifica che l'endpoint restituisca una lista di carte con paginazione."
