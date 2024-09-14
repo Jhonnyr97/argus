@@ -1,0 +1,35 @@
+constants:
+  base_url: https://api.magicthegathering.io/v1
+  default_page_size: '10'
+tests:
+  - name: Test cards-page-pageSize
+    description: Verify that the cards-page-pageSize endpoint works as expected.
+    request:
+      method: GET
+      endpoint: '{{base_url}}/cards'
+      params:
+        page: '1'
+        pageSize: '{{default_page_size}}'
+    expected:
+      status: 200
+      response:
+        type: json
+        json:
+          - key: cards
+            type: list
+            length: 10
+  - name: Test cards-name
+    description: Verify that the cards-name endpoint works as expected.
+    request:
+      method: GET
+      endpoint: '{{base_url}}/cards'
+      params:
+        name: Black Lotus
+    expected:
+      status: 200
+      response:
+        type: json
+        json:
+          - key: cards
+            type: list
+            length: 13

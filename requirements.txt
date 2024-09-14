@@ -1,7 +1,11 @@
-pyyaml
-pytest
-beautifulsoup4
+# core
 requests
 rich
-pytest-mock
 python-box
+pydantic
+ruamel.yaml
+pyyaml
+# docs
+sphinx
+sphinx-rtd-theme
+sphinx-autodoc-typehints
