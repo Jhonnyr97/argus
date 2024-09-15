@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" data-content_root="./">
+<head>
+  <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Writing Tests &mdash; Argus 1.1 documentation</title>
+      <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=80d5e7a1" />
+      <link rel="stylesheet" type="text/css" href="_static/css/theme.css?v=19f00094" />
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script src="_static/jquery.js?v=5d32c60e"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js?v=2cd50e6c"></script>
+        <script src="_static/documentation_options.js?v=56dcb7b8"></script>
+        <script src="_static/doctools.js?v=9a2dae69"></script>
+        <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script src="_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API Reference" href="api_reference.html" />
+    <link rel="prev" title="Quickstart" href="quickstart.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            Argus
+          </a>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Table of Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quickstart</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Writing Tests</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#introduction-to-yaml-tests">Introduction to YAML Tests</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#basic-test-structure">Basic Test Structure</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#detailed-breakdown-of-test-fields">Detailed Breakdown of Test Fields</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#using-constants">Using Constants</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#handling-dependencies">Handling Dependencies</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#validation-rules">Validation Rules</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#creating-a-test-file">Creating a Test File</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#complete-test-example">Complete Test Example</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#best-practices-for-writing-tests">Best Practices for Writing Tests</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#conclusion">Conclusion</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="api_reference.html">API Reference</a></li>
+<li class="toctree-l1"><a class="reference internal" href="contributing.html">Contributing</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">Argus</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
+      <li class="breadcrumb-item active">Writing Tests</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="_sources/writing_tests.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="writing-tests">
+<h1>Writing Tests<a class="headerlink" href="#writing-tests" title="Link to this heading"></a></h1>
+<p>Argus allows you to define system tests in simple YAML files. This section will guide you through creating your first tests, explaining the structure of the files and the various options available to ensure your frontend remains intact.</p>
+<section id="introduction-to-yaml-tests">
+<h2>Introduction to YAML Tests<a class="headerlink" href="#introduction-to-yaml-tests" title="Link to this heading"></a></h2>
+<p>Each test in Argus is defined within a YAML file and consists of three main sections:</p>
+<ol class="arabic simple">
+<li><p><strong>`name`</strong>: A unique identifier for the test.</p></li>
+<li><p><strong>`request`</strong>: Details of the HTTP request to be made.</p></li>
+<li><p><strong>`expected`</strong>: The expected outcome of the request.</p></li>
+</ol>
+<section id="basic-test-structure">
+<h3>Basic Test Structure<a class="headerlink" href="#basic-test-structure" title="Link to this heading"></a></h3>
+<p>Here is a basic example of a YAML test file:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Test</span><span class="nv"> </span><span class="s">list</span><span class="nv"> </span><span class="s">all</span><span class="nv"> </span><span class="s">cards&quot;</span>
+<span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Verify</span><span class="nv"> </span><span class="s">that</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">endpoint</span><span class="nv"> </span><span class="s">returns</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">list</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">cards.&quot;</span>
+<span class="nt">request</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;GET&quot;</span>
+<span class="w">  </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{base_url}}/cards&quot;</span>
+<span class="w">  </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">page</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">    </span><span class="nt">pageSize</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{default_page_size}}&quot;</span>
+<span class="nt">expected</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+<span class="w">  </span><span class="nt">response</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;json&quot;</span>
+<span class="w">    </span><span class="nt">json</span><span class="p">:</span>
+<span class="w">      </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cards&quot;</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;list&quot;</span>
+<span class="w">        </span><span class="nt">length</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{default_page_size}}&quot;</span>
+</pre></div>
+</div>
+<section id="detailed-breakdown-of-test-fields">
+<h4>Detailed Breakdown of Test Fields<a class="headerlink" href="#detailed-breakdown-of-test-fields" title="Link to this heading"></a></h4>
+<section id="name">
+<h5><cite>name</cite><a class="headerlink" href="#name" title="Link to this heading"></a></h5>
+<p>A unique name for the test, used to identify it in the results.</p>
+</section>
+<section id="description">
+<h5><cite>description</cite><a class="headerlink" href="#description" title="Link to this heading"></a></h5>
+<p>An optional field that describes the purpose of the test.</p>
+</section>
+<section id="request">
+<h5><cite>request</cite><a class="headerlink" href="#request" title="Link to this heading"></a></h5>
+<p>Defines the HTTP request to be made.</p>
+<ul class="simple">
+<li><p><strong>`method`</strong>: The HTTP method to use (e.g., GET, POST).</p></li>
+<li><p><strong>`endpoint`</strong>: The API endpoint to call. It can include constants like <cite>{{base_url}}</cite>.</p></li>
+<li><p><strong>`params`</strong>: (Optional) Query parameters for the request.</p></li>
+<li><p><strong>`headers`</strong>: (Optional) HTTP headers to include in the request.</p></li>
+<li><p><strong>`body`</strong>: (Optional) JSON body for POST/PUT requests.</p></li>
+</ul>
+</section>
+<section id="expected">
+<h5><cite>expected</cite><a class="headerlink" href="#expected" title="Link to this heading"></a></h5>
+<p>Defines the expected response from the request.</p>
+<ul class="simple">
+<li><p><strong>`status`</strong>: The expected HTTP status code (e.g., 200).</p></li>
+<li><p><strong>`response`</strong>:</p></li>
+<li><p><strong>`type`</strong>: The expected type of response (e.g., <cite>json</cite>).</p></li>
+<li><p><strong>`json`</strong>: A list of expectations for the JSON response data.</p></li>
+<li><p><strong>`key`</strong>: The JSON key to validate.</p></li>
+<li><p><strong>Validation Rules</strong>: Such as <cite>type</cite>, <cite>equal</cite>, <cite>not_equal</cite>, <cite>contains</cite>, <cite>regex</cite>, etc.</p></li>
+</ul>
+</section>
+</section>
+</section>
+<section id="using-constants">
+<h3>Using Constants<a class="headerlink" href="#using-constants" title="Link to this heading"></a></h3>
+<p>You can define constants to reuse values across your tests. Constants are defined in the <cite>constants</cite> section of the YAML file.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">constants</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">base_url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://api.magicthegathering.io/v1&quot;</span>
+<span class="w">  </span><span class="nt">default_page_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+
+<span class="nt">tests</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Test</span><span class="nv"> </span><span class="s">list</span><span class="nv"> </span><span class="s">all</span><span class="nv"> </span><span class="s">cards&quot;</span>
+<span class="w">    </span><span class="nt">request</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;GET&quot;</span>
+<span class="w">      </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{base_url}}/cards&quot;</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">page</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">        </span><span class="nt">pageSize</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{default_page_size}}&quot;</span>
+<span class="w">    </span><span class="nt">expected</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+<span class="w">      </span><span class="nt">response</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;json&quot;</span>
+<span class="w">        </span><span class="nt">json</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cards&quot;</span>
+<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;list&quot;</span>
+<span class="w">            </span><span class="nt">length</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{default_page_size}}&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="handling-dependencies">
+<h3>Handling Dependencies<a class="headerlink" href="#handling-dependencies" title="Link to this heading"></a></h3>
+<p>Tests can depend on responses from previous tests using the <cite>response_from</cite> field. This allows you to chain tests and use dynamic data.</p>
+<p><strong>Example:</strong></p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Test</span><span class="nv"> </span><span class="s">filter</span><span class="nv"> </span><span class="s">cards</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">name</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="s">response&quot;</span>
+<span class="w">  </span><span class="nt">request</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;GET&quot;</span>
+<span class="w">    </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{base_url}}/cards&quot;</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">name</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">response_from</span><span class="p">:</span>
+<span class="w">          </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Test</span><span class="nv"> </span><span class="s">filter</span><span class="nv"> </span><span class="s">cards</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">name&quot;</span>
+<span class="w">          </span><span class="nt">response</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">json</span><span class="p">:</span>
+<span class="w">              </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cards[0].name&quot;</span>
+<span class="w">  </span><span class="nt">expected</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+<span class="w">    </span><span class="nt">response</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;json&quot;</span>
+<span class="w">      </span><span class="nt">json</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cards[0].name&quot;</span>
+<span class="w">          </span><span class="nt">equal</span><span class="p">:</span>
+<span class="w">            </span><span class="nt">response_from</span><span class="p">:</span>
+<span class="w">              </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Test</span><span class="nv"> </span><span class="s">filter</span><span class="nv"> </span><span class="s">cards</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">name&quot;</span>
+<span class="w">              </span><span class="nt">response</span><span class="p">:</span>
+<span class="w">                </span><span class="nt">json</span><span class="p">:</span>
+<span class="w">                  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cards[0].name&quot;</span>
+</pre></div>
+</div>
+<p>In this example, the <cite>name</cite> parameter is populated with the value extracted from the response of the <cite>“Test filter cards by name”</cite> test.</p>
+</section>
+<section id="validation-rules">
+<h3>Validation Rules<a class="headerlink" href="#validation-rules" title="Link to this heading"></a></h3>
+<p>Argus supports various validation rules to ensure that API responses meet your expectations:</p>
+<ul class="simple">
+<li><p><strong>`type`</strong>: Checks the data type (e.g., <cite>list</cite>, <cite>dict</cite>, <cite>str</cite>).</p></li>
+<li><p><strong>`equal`</strong>: Asserts that a value equals the expected value.</p></li>
+<li><p><strong>`not_equal`</strong>: Asserts that a value does not equal the expected value.</p></li>
+<li><p><strong>`contains`</strong>: Checks if a list or string contains a specific value.</p></li>
+<li><p><strong>`not_contains`</strong>: Checks if a list or string does not contain a specific value.</p></li>
+<li><p><strong>`regex`</strong>: Validates strings against a regular expression.</p></li>
+<li><p><strong>`date_format`</strong>: Validates date strings against a specified format.</p></li>
+<li><p><strong>`range`</strong>: Asserts that a numeric value falls within a specified range.</p></li>
+<li><p><strong>`empty`</strong> / <strong>`not_empty`</strong>: Checks if a value is empty or not.</p></li>
+</ul>
+</section>
+<section id="creating-a-test-file">
+<h3>Creating a Test File<a class="headerlink" href="#creating-a-test-file" title="Link to this heading"></a></h3>
+<p>To create a new test, follow these steps:</p>
+<ol class="arabic">
+<li><p><strong>Define Constants (Optional)</strong></p>
+<p>If your test uses repeated values, define them in the <cite>constants</cite> section.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">constants</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">base_url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://api.magicthegathering.io/v1&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Add a New Test</strong></p>
+<p>Insert a new block under the <cite>tests</cite> section.</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Test</span><span class="nv"> </span><span class="s">name&quot;</span>
+<span class="w">  </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Description</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">test.&quot;</span>
+<span class="w">  </span><span class="nt">request</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;GET&quot;</span>
+<span class="w">    </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{base_url}}/cards&quot;</span>
+<span class="w">    </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Black</span><span class="nv"> </span><span class="s">Lotus&quot;</span>
+<span class="w">  </span><span class="nt">expected</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+<span class="w">    </span><span class="nt">response</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;json&quot;</span>
+<span class="w">      </span><span class="nt">json</span><span class="p">:</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cards&quot;</span>
+<span class="w">          </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;list&quot;</span>
+<span class="w">        </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cards[0].name&quot;</span>
+<span class="w">          </span><span class="nt">equal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Black</span><span class="nv"> </span><span class="s">Lotus&quot;</span>
+</pre></div>
+</div>
+</li>
+<li><p><strong>Save the File</strong></p>
+<p>Save your YAML file in the tests directory, for example, <cite>tests/magic.yml</cite>.</p>
+</li>
+</ol>
+</section>
+<section id="complete-test-example">
+<h3>Complete Test Example<a class="headerlink" href="#complete-test-example" title="Link to this heading"></a></h3>
+<p>Here is a complete example of a YAML test file that verifies various aspects of the cards endpoint:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="nt">constants</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">base_url</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://api.magicthegathering.io/v1&quot;</span>
+<span class="w">  </span><span class="nt">default_page_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10</span>
+
+<span class="nt">tests</span><span class="p">:</span>
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Test</span><span class="nv"> </span><span class="s">list</span><span class="nv"> </span><span class="s">all</span><span class="nv"> </span><span class="s">cards</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="s">pagination&quot;</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Verify</span><span class="nv"> </span><span class="s">that</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">endpoint</span><span class="nv"> </span><span class="s">returns</span><span class="nv"> </span><span class="s">a</span><span class="nv"> </span><span class="s">list</span><span class="nv"> </span><span class="s">of</span><span class="nv"> </span><span class="s">cards</span><span class="nv"> </span><span class="s">with</span><span class="nv"> </span><span class="s">pagination.&quot;</span>
+<span class="w">    </span><span class="nt">request</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;GET&quot;</span>
+<span class="w">      </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{base_url}}/cards&quot;</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">page</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1</span>
+<span class="w">        </span><span class="nt">pageSize</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{default_page_size}}&quot;</span>
+<span class="w">    </span><span class="nt">expected</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+<span class="w">      </span><span class="nt">response</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;json&quot;</span>
+<span class="w">        </span><span class="nt">json</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cards&quot;</span>
+<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;list&quot;</span>
+<span class="w">            </span><span class="nt">length</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{default_page_size}}&quot;</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Test</span><span class="nv"> </span><span class="s">filter</span><span class="nv"> </span><span class="s">cards</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">name&quot;</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Verify</span><span class="nv"> </span><span class="s">that</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">endpoint</span><span class="nv"> </span><span class="s">filters</span><span class="nv"> </span><span class="s">cards</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">name.&quot;</span>
+<span class="w">    </span><span class="nt">request</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;GET&quot;</span>
+<span class="w">      </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{base_url}}/cards&quot;</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Black</span><span class="nv"> </span><span class="s">Lotus&quot;</span>
+<span class="w">    </span><span class="nt">expected</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+<span class="w">      </span><span class="nt">response</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;json&quot;</span>
+<span class="w">        </span><span class="nt">json</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cards&quot;</span>
+<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;list&quot;</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cards[0].name&quot;</span>
+<span class="w">            </span><span class="nt">equal</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Black</span><span class="nv"> </span><span class="s">Lotus&quot;</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Test</span><span class="nv"> </span><span class="s">filter</span><span class="nv"> </span><span class="s">cards</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">name</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">check</span><span class="nv"> </span><span class="s">image</span><span class="nv"> </span><span class="s">URL&quot;</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Verify</span><span class="nv"> </span><span class="s">that</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">endpoint</span><span class="nv"> </span><span class="s">filters</span><span class="nv"> </span><span class="s">cards</span><span class="nv"> </span><span class="s">by</span><span class="nv"> </span><span class="s">name</span><span class="nv"> </span><span class="s">and</span><span class="nv"> </span><span class="s">validates</span><span class="nv"> </span><span class="s">the</span><span class="nv"> </span><span class="s">image</span><span class="nv"> </span><span class="s">URL.&quot;</span>
+<span class="w">    </span><span class="nt">request</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;GET&quot;</span>
+<span class="w">      </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{base_url}}/cards&quot;</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Black</span><span class="nv"> </span><span class="s">Lotus&quot;</span>
+<span class="w">    </span><span class="nt">expected</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">200</span>
+<span class="w">      </span><span class="nt">response</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;json&quot;</span>
+<span class="w">        </span><span class="nt">json</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cards&quot;</span>
+<span class="w">            </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;list&quot;</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;cards[0].imageUrl&quot;</span>
+<span class="w">            </span><span class="nt">regex</span><span class="p">:</span><span class="w"> </span><span class="s">&#39;https?:\/\/[a-zA-Z0-9\-_\.]+(\.[a-zA-Z]{2,})(\/[a-zA-Z0-9\-_\.]*)*(\?[a-zA-Z0-9=&amp;_]*)?&#39;</span>
+
+<span class="w">  </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Test</span><span class="nv"> </span><span class="s">invalid</span><span class="nv"> </span><span class="s">request</span><span class="nv"> </span><span class="s">returns</span><span class="nv"> </span><span class="s">error&quot;</span>
+<span class="w">    </span><span class="nt">description</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;Verify</span><span class="nv"> </span><span class="s">that</span><span class="nv"> </span><span class="s">an</span><span class="nv"> </span><span class="s">invalid</span><span class="nv"> </span><span class="s">request</span><span class="nv"> </span><span class="s">returns</span><span class="nv"> </span><span class="s">an</span><span class="nv"> </span><span class="s">error.&quot;</span>
+<span class="w">    </span><span class="nt">request</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">method</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;GET&quot;</span>
+<span class="w">      </span><span class="nt">endpoint</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;{{base_url}}/invalid_endpoint&quot;</span>
+<span class="w">      </span><span class="nt">params</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">invalid_param</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;invalid&quot;</span>
+<span class="w">    </span><span class="nt">expected</span><span class="p">:</span>
+<span class="w">      </span><span class="nt">status</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">404</span>
+<span class="w">      </span><span class="nt">response</span><span class="p">:</span>
+<span class="w">        </span><span class="nt">type</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;json&quot;</span>
+<span class="w">        </span><span class="nt">json</span><span class="p">:</span>
+<span class="w">          </span><span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">key</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;error&quot;</span>
+<span class="w">            </span><span class="nt">contains</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;not-found&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="best-practices-for-writing-tests">
+<h3>Best Practices for Writing Tests<a class="headerlink" href="#best-practices-for-writing-tests" title="Link to this heading"></a></h3>
+<ul class="simple">
+<li><p><strong>Clear Naming</strong>: Assign descriptive names to your tests to easily understand the results.</p></li>
+<li><p><strong>Detailed Descriptions</strong>: Use the <cite>description</cite> field to explain the purpose of the test.</p></li>
+<li><p><strong>Reuse Constants</strong>: Define constants to avoid repetition and make maintenance easier.</p></li>
+<li><p><strong>Comprehensive Validations</strong>: Utilize various validation rules to cover different aspects of the response.</p></li>
+<li><p><strong>Manage Dependencies</strong>: If a test depends on another’s response, use <cite>response_from</cite> to maintain consistency.</p></li>
+</ul>
+</section>
+<section id="conclusion">
+<h3>Conclusion<a class="headerlink" href="#conclusion" title="Link to this heading"></a></h3>
+<p>Writing tests with Argus is straightforward and intuitive thanks to well-structured YAML files. By following this guide, you’ll be able to define effective tests that ensure your APIs function correctly. For more examples and details, refer to the sample test files included in the repository.</p>
+</section>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="quickstart.html" class="btn btn-neutral float-left" title="Quickstart" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="api_reference.html" class="btn btn-neutral float-right" title="API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2024, Nilthon Jhon Rojas Apumayta.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
