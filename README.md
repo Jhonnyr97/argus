@@ -18,6 +18,10 @@ Getting started with Argus is as easy as 1, 2, 3:
 2. Build a Docker image with `docker build -t my-python-tests .`.
 3. Run the Docker image with `docker run --rm -it -v .:/app my-python-tests bash`.
 
+Alternatively, you can pull the pre-built Docker image directly from Docker Hub:
+```bash
+    docker run --rm -it -v .:/app nilthrojas/argus:latest bash
+```
 ## Crafting Your Tests
 
 Argus lets you write your tests in straightforward YAML files. Each test should have:
